@@ -5,7 +5,7 @@
  * Description: AI Provider for OpenAI Compatible ChatCompletion for the WordPress AI Client.
  * Requires at least: 6.9
  * Requires PHP: 7.4
- * Version: 1.0.12
+ * Version: 1.0.13
  * Author: zjcboy
  * License: GPL-2.0-or-later
  * License URI: https://spdx.org/licenses/GPL-2.0-or-later.html
@@ -136,7 +136,7 @@ function register_settings(): void
     register_setting('openai_compatible_settings_group', 'openai_compatible_models', [
         'type' => 'string',
         'sanitize_callback' => 'sanitize_text_field',
-        'default' => 'gpt-4o,gpt-4o-mini',
+        'default' => '',
     ]);
 }
 
@@ -207,7 +207,7 @@ function render_settings_page(): void
                     </th>
                     <td>
                         <input type="text" id="openai_compatible_models" name="openai_compatible_models"
-                            value="<?php echo esc_attr(get_option('openai_compatible_models', 'gpt-4o,gpt-4o-mini')); ?>"
+                            value="<?php echo esc_attr(get_option('openai_compatible_models', '')); ?>"
                             class="large-text" />
                         <p class="description">
                             <?php esc_html_e('Comma-separated list of model IDs to make available (e.g., gpt-4o,gpt-4o-mini,deepseek-chat). If empty, the plugin will try to fetch models dynamically from the /models endpoint.', 'ai-provider-for-openai-chat-completion'); ?>
