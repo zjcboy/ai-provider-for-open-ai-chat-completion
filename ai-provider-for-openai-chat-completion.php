@@ -5,7 +5,7 @@
  * Description: AI Provider for OpenAI Compatible ChatCompletion for the WordPress AI Client.
  * Requires at least: 6.9
  * Requires PHP: 7.4
- * Version: 1.0.4
+ * Version: 1.0.5
  * Author: zjcboy
  * License: GPL-2.0-or-later
  * License URI: https://spdx.org/licenses/GPL-2.0-or-later.html
@@ -27,6 +27,28 @@ if (!defined('ABSPATH')) {
 }
 
 require_once __DIR__ . '/src/autoload.php';
+
+/**
+ * Gets the configured API key, checking the custom option, the core connector option, and constants/env vars.
+ *
+ * @since 1.0.5
+ *
+ * @return string API key or empty string.
+ */
+function get_effective_api_key(): string
+{
+    if (defined('OPENAI_COMPATIBLE_API_KEY') && !empty(OPENAI_COMPATIBLE_API_KEY)) {
+        return OPENAI_COMPATIBLE_API_KEY;
+    }
+    if (getenv('OPENAI_COMPATIBLE_API_KEY')) {
+        return (string) getenv('OPENAI_COMPATIBLE_API_KEY');
+    }
+    $apiKey = get_option('openai_compatible_api_key', '');
+    if (empty($apiKey)) {
+        $apiKey = get_option('connectors_ai_openai_compatible_api_key', '');
+    }
+    return (string) $apiKey;
+}
 
 /**
  * Registers the OpenAI Compatible AI Provider with the AI Client.
@@ -51,7 +73,7 @@ function register_provider(): void
 
     // Set request authentication from options if present
     if (function_exists('get_option')) {
-        $apiKey = get_option('openai_compatible_api_key');
+        $apiKey = get_effective_api_key();
         if (!empty($apiKey)) {
             $registry->setProviderRequestAuthentication(
                 OpenAiCompatibleProvider::class,
@@ -151,6 +173,10 @@ function render_settings_page(): void
                                 <br />
                                 <span
                                     style="color: green; font-weight: bold;"><?php esc_html_e('(Already defined via constant in wp-config.php)', 'ai-provider-for-openai-chat-completion'); ?></span>
+                            <?php elseif (get_option('connectors_ai_openai_compatible_api_key')): ?>
+                                <br />
+                                <span
+                                    style="color: green; font-weight: bold;"><?php esc_html_e('(Already configured in Jetpack/WordPress Connectors settings)', 'ai-provider-for-openai-chat-completion'); ?></span>
                             <?php endif; ?>
                         </p>
                     </td>
@@ -186,7 +212,7 @@ function clear_models_transient_cache(): void
 {
     if (function_exists('delete_transient')) {
         $apiUrl = get_option('openai_compatible_api_url', 'https://api.openai.com/v1');
-        $apiKey = get_option('openai_compatible_api_key', '');
+        $apiKey = get_effective_api_key();
         $transientKey = 'oa_compat_models_' . md5($apiUrl . $apiKey);
         delete_transient($transientKey);
 
@@ -247,6 +273,7 @@ if (function_exists('add_action')) {
         add_action('admin_init', __NAMESPACE__ . '\\register_settings');
         add_action('update_option_openai_compatible_api_url', __NAMESPACE__ . '\\clear_models_transient_cache');
         add_action('update_option_openai_compatible_api_key', __NAMESPACE__ . '\\clear_models_transient_cache');
+        add_action('update_option_connectors_ai_openai_compatible_api_key', __NAMESPACE__ . '\\clear_models_transient_cache');
         add_action('update_option_openai_compatible_models', __NAMESPACE__ . '\\clear_models_transient_cache');
     }
 }
