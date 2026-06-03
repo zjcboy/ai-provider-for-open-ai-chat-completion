@@ -1,0 +1,14 @@
+includes:
+    - vendor/szepeviktor/phpstan-wordpress/extension.neon
+
+parameters:
+    level: 5
+    paths:
+        - ai-provider-for-openai-chat-completion.php
+        - src/
+    excludePaths:
+        - vendor/
+        - scratch/
+    scanDirectories:
+        - /Users/zhengjunchao/Studio/sugervape/wp-includes/php-ai-client/src/
+    treatPhpDocTypesAsCertain: false
