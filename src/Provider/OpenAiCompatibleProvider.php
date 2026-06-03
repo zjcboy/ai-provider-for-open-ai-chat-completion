@@ -75,11 +75,41 @@ class OpenAiCompatibleProvider extends AbstractApiProvider
      */
     protected static function createProviderMetadata(): ProviderMetadata
     {
+        $credentialsUrl = 'https://platform.openai.com/api-keys';
+        $apiUrl = '';
+        if (function_exists('get_option')) {
+            $apiUrl = get_option('openai_compatible_api_url');
+        }
+        if (!empty($apiUrl)) {
+            $host = parse_url($apiUrl, PHP_URL_HOST);
+            if (!empty($host)) {
+                $host = strtolower($host);
+                if (str_contains($host, 'deepseek.com')) {
+                    $credentialsUrl = 'https://platform.deepseek.com/api_keys';
+                } elseif (str_contains($host, 'openrouter.ai')) {
+                    $credentialsUrl = 'https://openrouter.ai/keys';
+                } elseif (str_contains($host, 'openai.com')) {
+                    $credentialsUrl = 'https://platform.openai.com/api-keys';
+                } elseif (
+                    $host === 'localhost' ||
+                    $host === '127.0.0.1' ||
+                    str_ends_with($host, '.local') ||
+                    str_starts_with($host, '192.168.') ||
+                    str_starts_with($host, '10.')
+                ) {
+                    $credentialsUrl = '';
+                } else {
+                    $scheme = parse_url($apiUrl, PHP_URL_SCHEME) ?: 'https';
+                    $credentialsUrl = $scheme . '://' . $host;
+                }
+            }
+        }
+
         return new ProviderMetadata(
             'openai-compatible',
             'OpenAI Compatible',
             ProviderTypeEnum::cloud(),
-            'https://platform.openai.com/api-keys',
+            $credentialsUrl,
             RequestAuthenticationMethod::apiKey()
         );
     }

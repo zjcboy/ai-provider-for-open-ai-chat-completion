@@ -34,6 +34,6 @@ jobs:
       - name: Create GitHub Release and Upload Assets
         uses: softprops/action-gh-release@v2
         with:
-          files: ai-provider-for-openai-chat-completion.zip
+          files: ai-provider-for-openai-chat-completion-*.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

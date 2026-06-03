@@ -43,10 +43,28 @@ class OpenAiCompatibleModelMetadataDirectory extends AbstractApiBasedModelMetada
      */
     protected function sendListModelsRequest(): array
     {
+        $apiKey = '';
+        try {
+            $requestAuth = $this->getRequestAuthentication();
+            if ($requestAuth instanceof \WordPress\AiClient\Providers\Http\DTO\ApiKeyRequestAuthentication) {
+                $apiKey = $requestAuth->getApiKey();
+            }
+        } catch (\Exception $e) {
+            // Ignore if request authentication is not resolved yet
+        }
+
+        if (empty($apiKey)) {
+            $apiKey = \WordPress\OpenAiCompatibleAiProvider\get_effective_api_key();
+        }
+
+        if (empty($apiKey)) {
+            throw new \WordPress\AiClient\Common\Exception\RuntimeException('API Key is not configured.');
+        }
+
         // 1. Try to load custom models configured in the WordPress settings page.
         if (function_exists('get_option')) {
             $customModelsOpt = get_option('openai_compatible_models');
-            if (!empty($customModelsOpt)) {
+            if (!empty($customModelsOpt) && $customModelsOpt !== 'gpt-4o,gpt-4o-mini') {
                 $customModels = array_filter(array_map('trim', explode(',', $customModelsOpt)));
                 if (!empty($customModels)) {
                     $modelMetadataMap = [];
@@ -66,7 +84,30 @@ class OpenAiCompatibleModelMetadataDirectory extends AbstractApiBasedModelMetada
             }
         }
 
-        // 2. Otherwise, fetch from the /models API.
+        // 2. Read from Transient Cache if available in WordPress environment
+        $transientKey = '';
+        if (function_exists('get_transient')) {
+            $apiUrl = '';
+            if (function_exists('get_option')) {
+                $apiUrl = get_option('openai_compatible_api_url', 'https://api.openai.com/v1');
+            }
+            $apiKey = '';
+            try {
+                $requestAuth = $this->getRequestAuthentication();
+                if ($requestAuth instanceof \WordPress\AiClient\Providers\Http\DTO\ApiKeyRequestAuthentication) {
+                    $apiKey = $requestAuth->getApiKey();
+                }
+            } catch (\Exception $e) {
+                // Ignore if request authentication is not resolved yet
+            }
+            $transientKey = 'oa_compat_models_' . md5($apiUrl . $apiKey);
+            $cachedMap = get_transient($transientKey);
+            if (is_array($cachedMap)) {
+                return $cachedMap;
+            }
+        }
+
+        // 3. Otherwise, fetch from the /models API.
         try {
             $httpTransporter = $this->getHttpTransporter();
 
@@ -88,9 +129,15 @@ class OpenAiCompatibleModelMetadataDirectory extends AbstractApiBasedModelMetada
                 $modelMetadataMap[$modelMetadata->getId()] = $modelMetadata;
             }
 
+            // Save to Transient Cache (expires in 24 hours)
+            if (!empty($transientKey) && function_exists('set_transient')) {
+                set_transient($transientKey, $modelMetadataMap, 86400);
+            }
+
             return $modelMetadataMap;
         } catch (\Exception $e) {
-            // 3. Fallback to default models if request fails (e.g. offline, local host or missing credentials)
+            error_log('[AI OpenAiCompatible] List models request failed: ' . $e->getMessage());
+            // 4. Fallback to default models if request fails (e.g. offline, local host or missing credentials)
             $defaultModels = ['gpt-4o', 'gpt-4o-mini'];
             $modelMetadataMap = [];
             foreach ($defaultModels as $modelId) {
@@ -232,7 +279,31 @@ class OpenAiCompatibleModelMetadataDirectory extends AbstractApiBasedModelMetada
             }
         } else {
             // Guess vision capability based on model ID
-            if (str_contains($modelId, 'vision') || str_contains($modelId, 'gpt-4o') || str_contains($modelId, 'claude-3') || str_contains($modelId, 'gemini-1.5')) {
+            $isO1 = (str_starts_with($modelId, 'o1') || str_contains($modelId, '/o1'));
+            $isGrokVision = (
+                str_contains($modelId, 'grok-2') ||
+                str_contains($modelId, 'grok-3') ||
+                str_contains($modelId, 'grok-4')
+            );
+            if (
+                str_contains($modelId, 'vision') ||
+                str_contains($modelId, 'gpt-4o') ||
+                str_contains($modelId, 'gpt-4-turbo') ||
+                str_contains($modelId, 'gpt-5') ||
+                str_contains($modelId, 'claude-') ||
+                str_contains($modelId, 'gemini') ||
+                str_contains($modelId, 'pixtral') ||
+                str_contains($modelId, '-vl') ||
+                str_contains($modelId, 'vl-') ||
+                str_contains($modelId, 'internvl') ||
+                str_contains($modelId, 'llava') ||
+                str_contains($modelId, 'minicpm') ||
+                str_contains($modelId, 'omni') ||
+                str_contains($modelId, 'cogvlm') ||
+                str_contains($modelId, 'fuyu') ||
+                ($isO1 && !str_contains($modelId, 'mini') && !str_contains($modelId, 'preview')) ||
+                $isGrokVision
+            ) {
                 $inputModalities[] = ModalityEnum::image();
             }
         }
