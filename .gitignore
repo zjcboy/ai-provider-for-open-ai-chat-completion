@@ -1,0 +1,10 @@
+# Local WordPress plugins under development
+/ai/
+/alt-text-generator-gpt-vision/
+
+# Built zip files
+/ai-provider-for-openai-chat-completion-*.zip
+/ai-provider-for-openai-chat-completion.zip
+
+# OS files
+.DS_Store
