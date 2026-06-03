@@ -5,7 +5,7 @@
  * Description: AI Provider for OpenAI Compatible ChatCompletion for the WordPress AI Client.
  * Requires at least: 6.9
  * Requires PHP: 7.4
- * Version: 1.0.13
+ * Version: 1.0.14
  * Author: zjcboy
  * License: GPL-2.0-or-later
  * License URI: https://spdx.org/licenses/GPL-2.0-or-later.html
@@ -155,12 +155,18 @@ function render_settings_page(): void
 
     if (isset($_GET['refresh_models']) && check_admin_referer('refresh_openai_compatible_models')) {
         fetch_raw_models_data(true);
-        wp_safe_redirect(admin_url('options-general.php?page=openai-compatible-settings'));
+        clear_models_transient_cache();
+        wp_safe_redirect(admin_url('options-general.php?page=openai-compatible-settings&cache_cleared=1'));
         exit;
     }
     ?>
     <div class="wrap">
         <h1><?php esc_html_e('OpenAI Compatible AI Settings', 'ai-provider-for-openai-chat-completion'); ?></h1>
+        <?php if (isset($_GET['cache_cleared']) && $_GET['cache_cleared'] === '1'): ?>
+            <div class="notice notice-success is-dismissible" style="margin: 15px 0 0;">
+                <p><?php esc_html_e('Models list refreshed and transient cache cleared successfully!', 'ai-provider-for-openai-chat-completion'); ?></p>
+            </div>
+        <?php endif; ?>
         <form action="options.php" method="post">
             <?php
             settings_fields('openai_compatible_settings_group');
