@@ -5,7 +5,7 @@
  * Description: AI Provider for OpenAI Compatible ChatCompletion for the WordPress AI Client.
  * Requires at least: 6.9
  * Requires PHP: 7.4
- * Version: 1.0.2
+ * Version: 1.0.3
  * Author: zjcboy
  * License: GPL-2.0-or-later
  * License URI: https://spdx.org/licenses/GPL-2.0-or-later.html
@@ -207,6 +207,34 @@ function clear_models_transient_cache(): void
             }
         }
     }
+}
+
+/**
+ * Filters the HTTP request arguments to disable SSL verification and local IP checks
+ * specifically for requests to the configured OpenAI-compatible API.
+ *
+ * @since 1.0.0
+ *
+ * @param array<string, mixed> $args HTTP request arguments.
+ * @param string               $url  The request URL.
+ * @return array<string, mixed> Filtered arguments.
+ */
+function filter_http_request_args(array $args, string $url): array
+{
+    if (function_exists('get_option')) {
+        $customUrl = get_option('openai_compatible_api_url');
+        if (!empty($customUrl)) {
+            if (str_starts_with($url, $customUrl)) {
+                $args['sslverify'] = false;
+                $args['reject_unsafe_urls'] = false;
+            }
+        }
+    }
+    return $args;
+}
+
+if (function_exists('add_filter')) {
+    add_filter('http_request_args', __NAMESPACE__ . '\\filter_http_request_args', 10, 2);
 }
 
 if (function_exists('add_action')) {
