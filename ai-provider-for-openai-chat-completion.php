@@ -5,7 +5,7 @@
  * Description: AI Provider for OpenAI Compatible ChatCompletion for the WordPress AI Client.
  * Requires at least: 6.9
  * Requires PHP: 7.4
- * Version: 1.0.5
+ * Version: 1.0.6
  * Author: zjcboy
  * License: GPL-2.0-or-later
  * License URI: https://spdx.org/licenses/GPL-2.0-or-later.html
@@ -138,6 +138,12 @@ function render_settings_page(): void
     if (!current_user_can('manage_options')) {
         return;
     }
+
+    if (isset($_GET['refresh_models']) && check_admin_referer('refresh_openai_compatible_models')) {
+        fetch_raw_models_data(true);
+        wp_safe_redirect(admin_url('options-general.php?page=openai-compatible-settings'));
+        exit;
+    }
     ?>
     <div class="wrap">
         <h1><?php esc_html_e('OpenAI Compatible AI Settings', 'ai-provider-for-openai-chat-completion'); ?></h1>
@@ -197,8 +203,152 @@ function render_settings_page(): void
             </table>
             <?php submit_button(); ?>
         </form>
+
+        <?php
+        $apiKey = get_effective_api_key();
+        if (!empty($apiKey)):
+            $models = fetch_raw_models_data();
+            ?>
+            <hr style="margin: 30px 0 20px;" />
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px;">
+                <h2 style="margin: 0;"><?php esc_html_e('Available Models', 'ai-provider-for-openai-chat-completion'); ?></h2>
+                <a href="<?php echo esc_url(wp_nonce_url(admin_url('options-general.php?page=openai-compatible-settings&refresh_models=1'), 'refresh_openai_compatible_models')); ?>" class="button button-secondary">
+                    <?php esc_html_e('Refresh Models List', 'ai-provider-for-openai-chat-completion'); ?>
+                </a>
+            </div>
+            <?php if (empty($models)): ?>
+                <div class="notice notice-warning inline" style="margin: 0 0 15px;"><p><?php esc_html_e('No models found, or unable to fetch models list from the configured endpoint.', 'ai-provider-for-openai-chat-completion'); ?></p></div>
+            <?php else: ?>
+                <table class="wp-list-table widefat fixed striped table-view-list" style="margin-top: 15px;">
+                    <thead>
+                        <tr>
+                            <th scope="col" style="width: 30%; font-weight: bold;"><?php esc_html_e('Model Name / ID', 'ai-provider-for-openai-chat-completion'); ?></th>
+                            <th scope="col" style="width: 15%; font-weight: bold;"><?php esc_html_e('Context Length', 'ai-provider-for-openai-chat-completion'); ?></th>
+                            <th scope="col" style="width: 25%; font-weight: bold;"><?php esc_html_e('Pricing (per 1M tokens)', 'ai-provider-for-openai-chat-completion'); ?></th>
+                            <th scope="col" style="width: 30%; font-weight: bold;"><?php esc_html_e('Description', 'ai-provider-for-openai-chat-completion'); ?></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($models as $model):
+                            $modelId = $model['id'] ?? '';
+                            $modelName = $model['name'] ?? $modelId;
+                            $contextLength = isset($model['context_length']) ? number_format((int)$model['context_length']) . ' tokens' : __('N/A', 'ai-provider-for-openai-chat-completion');
+                            $description = $model['description'] ?? __('No description provided.', 'ai-provider-for-openai-chat-completion');
+                            $pricing = format_model_pricing($model);
+                            ?>
+                            <tr>
+                                <td>
+                                    <strong><?php echo esc_html($modelName); ?></strong>
+                                    <br /><code style="font-size: 11px;"><?php echo esc_html($modelId); ?></code>
+                                </td>
+                                <td><?php echo esc_html($contextLength); ?></td>
+                                <td><code><?php echo esc_html($pricing); ?></code></td>
+                                <td><?php echo esc_html($description); ?></td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            <?php endif;
+        else:
+            ?>
+            <hr style="margin: 30px 0 20px;" />
+            <h2><?php esc_html_e('Available Models', 'ai-provider-for-openai-chat-completion'); ?></h2>
+            <p class="description"><?php esc_html_e('Please configure and save your API Key to fetch and display the list of available models.', 'ai-provider-for-openai-chat-completion'); ?></p>
+        <?php
+        endif;
+        ?>
     </div>
     <?php
+}
+
+/**
+ * Fetches raw models data from the configured OpenAI-compatible API.
+ * Caches the response in a transient.
+ *
+ * @since 1.0.6
+ *
+ * @param bool $force_refresh Whether to force refresh and bypass cache.
+ * @return array|null List of models or null on failure.
+ */
+function fetch_raw_models_data(bool $force_refresh = false): ?array
+{
+    if (!function_exists('get_option')) {
+        return null;
+    }
+
+    $apiUrl = get_option('openai_compatible_api_url', 'https://api.openai.com/v1');
+    $apiKey = get_effective_api_key();
+    if (empty($apiKey)) {
+        return null;
+    }
+
+    $cacheKey = 'oa_compat_raw_models_' . md5($apiUrl . $apiKey);
+
+    if (!$force_refresh) {
+        $cached = get_transient($cacheKey);
+        if (is_array($cached)) {
+            return $cached;
+        }
+    }
+
+    $url = rtrim($apiUrl, '/') . '/models';
+    $args = [
+        'headers' => [
+            'Authorization' => 'Bearer ' . $apiKey,
+            'Content-Type'  => 'application/json',
+        ],
+        'timeout' => 15,
+        'sslverify' => false,
+        'reject_unsafe_urls' => false,
+    ];
+
+    $response = wp_remote_get($url, $args);
+    if (is_wp_error($response)) {
+        return null;
+    }
+
+    $body = wp_remote_retrieve_body($response);
+    $data = json_decode($body, true);
+    if (!is_array($data) || !isset($data['data']) || !is_array($data['data'])) {
+        return null;
+    }
+
+    $models = $data['data'];
+    set_transient($cacheKey, $models, 86400); // Cache for 24 hours
+    return $models;
+}
+
+/**
+ * Formats model pricing details for display.
+ * Supports OpenRouter compatible pricing schemas.
+ *
+ * @since 1.0.6
+ *
+ * @param array $model Model data.
+ * @return string Formatted pricing string.
+ */
+function format_model_pricing(array $model): string
+{
+    if (isset($model['pricing']) && is_array($model['pricing'])) {
+        $prompt = isset($model['pricing']['prompt']) ? floatval($model['pricing']['prompt']) : null;
+        $completion = isset($model['pricing']['completion']) ? floatval($model['pricing']['completion']) : null;
+
+        if (null !== $prompt && null !== $completion) {
+            if ($prompt == 0 && $completion == 0) {
+                return __('Free', 'ai-provider-for-openai-chat-completion');
+            }
+
+            $promptPerMil = $prompt * 1000000;
+            $completionPerMil = $completion * 1000000;
+
+            return sprintf(
+                __('In: $%s / Out: $%s', 'ai-provider-for-openai-chat-completion'),
+                number_format($promptPerMil, 2),
+                number_format($completionPerMil, 2)
+            );
+        }
+    }
+    return __('N/A', 'ai-provider-for-openai-chat-completion');
 }
 
 /**
@@ -215,6 +365,9 @@ function clear_models_transient_cache(): void
         $apiKey = get_effective_api_key();
         $transientKey = 'oa_compat_models_' . md5($apiUrl . $apiKey);
         delete_transient($transientKey);
+
+        $rawTransientKey = 'oa_compat_raw_models_' . md5($apiUrl . $apiKey);
+        delete_transient($rawTransientKey);
 
         // Also invalidate PSR-16 cache on the registry's directory if it is loaded
         if (class_exists(AiClient::class)) {
