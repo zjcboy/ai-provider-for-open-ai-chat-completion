@@ -5,7 +5,7 @@
  * Description: AI Provider for OpenAI Compatible ChatCompletion for the WordPress AI Client.
  * Requires at least: 6.9
  * Requires PHP: 7.4
- * Version: 1.0.6
+ * Version: 1.0.7
  * Author: zjcboy
  * License: GPL-2.0-or-later
  * License URI: https://spdx.org/licenses/GPL-2.0-or-later.html
@@ -59,6 +59,20 @@ function get_effective_api_key(): string
  */
 function register_provider(): void
 {
+    // Migrate old option to new option if new option is empty.
+    if (function_exists('get_option') && function_exists('update_option')) {
+        $new_key = get_option('openai_compatible_api_key', '');
+        if (empty($new_key)) {
+            $old_key = get_option('connectors_ai_openai_compatible_api_key', '');
+            if (!empty($old_key)) {
+                update_option('openai_compatible_api_key', $old_key);
+                if (function_exists(__NAMESPACE__ . '\\clear_models_transient_cache')) {
+                    clear_models_transient_cache();
+                }
+            }
+        }
+    }
+
     if (!class_exists(AiClient::class)) {
         return;
     }
@@ -414,11 +428,34 @@ function filter_http_request_args(array $args, string $url): array
     return $args;
 }
 
+/**
+ * Overrides the setting name for the OpenAI Compatible connector to match the custom setting page.
+ * This ensures that both the Connectors settings page and the custom settings page update the same option,
+ * and that the AI Client properly recognizes that the connector is configured.
+ *
+ * @since 1.0.7
+ *
+ * @param mixed $registry The WP_Connector_Registry instance.
+ * @return void
+ */
+function override_connector_setting_name($registry): void
+{
+    if (!class_exists('\\WP_Connector_Registry') || !($registry instanceof \WP_Connector_Registry)) {
+        return;
+    }
+    if ($registry->is_registered('openai-compatible')) {
+        $connector = $registry->unregister('openai-compatible');
+        $connector['authentication']['setting_name'] = 'openai_compatible_api_key';
+        $registry->register('openai-compatible', $connector);
+    }
+}
+
 if (function_exists('add_filter')) {
     add_filter('http_request_args', __NAMESPACE__ . '\\filter_http_request_args', 10, 2);
 }
 
 if (function_exists('add_action')) {
+    add_action('wp_connectors_init', __NAMESPACE__ . '\\override_connector_setting_name');
     add_action('init', __NAMESPACE__ . '\\register_provider', 5);
 
     if (function_exists('is_admin') && is_admin()) {
@@ -430,3 +467,4 @@ if (function_exists('add_action')) {
         add_action('update_option_openai_compatible_models', __NAMESPACE__ . '\\clear_models_transient_cache');
     }
 }
+
