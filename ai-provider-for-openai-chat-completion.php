@@ -5,7 +5,7 @@
  * Description: AI Provider for OpenAI Compatible ChatCompletion for the WordPress AI Client.
  * Requires at least: 6.9
  * Requires PHP: 7.4
- * Version: 1.0.0
+ * Version: 1.0.1
  * Author: zjcboy
  * License: GPL-2.0-or-later
  * License URI: https://spdx.org/licenses/GPL-2.0-or-later.html
@@ -175,11 +175,48 @@ function render_settings_page(): void
     <?php
 }
 
+/**
+ * Clears the transient cache when the settings options are updated.
+ *
+ * @since 1.0.0
+ *
+ * @return void
+ */
+function clear_models_transient_cache(): void
+{
+    if (function_exists('delete_transient')) {
+        $apiUrl = get_option('openai_compatible_api_url', 'https://api.openai.com/v1');
+        $apiKey = get_option('openai_compatible_api_key', '');
+        $transientKey = 'oa_compat_models_' . md5($apiUrl . $apiKey);
+        delete_transient($transientKey);
+
+        // Also invalidate PSR-16 cache on the registry's directory if it is loaded
+        if (class_exists(AiClient::class)) {
+            try {
+                $registry = AiClient::defaultRegistry();
+                if ($registry->hasProvider(OpenAiCompatibleProvider::class)) {
+                    $providerClass = $registry->getProviderClassName('openai-compatible');
+                    /** @var mixed $directory */
+                    $directory = $providerClass::modelMetadataDirectory();
+                    if (method_exists($directory, 'invalidateCaches')) {
+                        $directory->invalidateCaches();
+                    }
+                }
+            } catch (\Exception $e) {
+                // Ignore errors
+            }
+        }
+    }
+}
+
 if (function_exists('add_action')) {
     add_action('init', __NAMESPACE__ . '\\register_provider', 5);
 
     if (function_exists('is_admin') && is_admin()) {
         add_action('admin_menu', __NAMESPACE__ . '\\add_settings_page');
         add_action('admin_init', __NAMESPACE__ . '\\register_settings');
+        add_action('update_option_openai_compatible_api_url', __NAMESPACE__ . '\\clear_models_transient_cache');
+        add_action('update_option_openai_compatible_api_key', __NAMESPACE__ . '\\clear_models_transient_cache');
+        add_action('update_option_openai_compatible_models', __NAMESPACE__ . '\\clear_models_transient_cache');
     }
 }
