@@ -12,10 +12,10 @@ An AI Provider for OpenAI Compatible ChatCompletion endpoints for the [PHP AI Cl
 
 ### As a WordPress Plugin
 
-1. Download the plugin files
-2. Upload to `/wp-content/plugins/ai-provider-for-openai-chat-completion/`
-3. Ensure the PHP AI Client is installed and active
-4. Activate the plugin through the WordPress admin
+1. Download the pre-built `ai-provider-for-openai-chat-completion.zip` file from the [Releases](../../releases) page of the GitHub repository.
+2. Upload and install it via **Plugins -> Add New -> Upload Plugin** in your WordPress admin panel, OR upload the unzipped folder to `/wp-content/plugins/`.
+3. Ensure the PHP AI Client is installed and active.
+4. Activate the plugin through the WordPress admin.
 
 ### As a Composer Package
 
@@ -82,22 +82,51 @@ echo $result->toText();
 
 ---
 
+## Creating a GitHub Release
+
+You can create a release to provide ZIP downloads using two methods:
+
+### Method A: Automated Release (Recommended)
+
+We have configured a GitHub Actions workflow that automates this when a new Git tag is pushed.
+
+1. **Tag and push a new version**:
+   ```bash
+   git tag v1.0.0
+   git push origin v1.0.0
+   ```
+2. The workflow will run the semantic checks (PHP Lint & PHPStan) and automatically compile and attach `ai-provider-for-openai-chat-completion.zip` to the release.
+
+### Method B: Manual Release
+
+1. Run the local packaging script to generate the ZIP file:
+   ```bash
+   ./build.sh
+   ```
+2. Go to your repository on GitHub.
+3. Click on the **Releases** section on the right side of the repository homepage.
+4. Click **Draft a new release**.
+5. Select or create a tag (e.g. `v1.0.0`), fill in the release title and description.
+6. Drag and drop the generated `ai-provider-for-openai-chat-completion.zip` into the **Attach binaries** box.
+7. Click **Publish release**.
+
+---
+
 ## Publishing to WordPress.org
 
 Follow these steps to submit and publish this plugin to the official WordPress.org Plugin Repository:
 
 ### Step 1: Prepare the Submission Package
-1. Ensure all development or temporary files (e.g. scratch tests) are excluded.
-2. Zip the plugin directory. The folder inside the zip should be named `ai-provider-for-openai-chat-completion` (this matches your WordPress.org slug).
-   ```bash
-   zip -r ai-provider-for-openai-chat-completion.zip ai-provider-for-openai-chat-completion/ -x "*.git*" "scratch/*"
-   ```
+Exclude any Git files, metadata, or scratch tests, and compress the plugin directory:
+```bash
+./build.sh
+```
 
 ### Step 2: Submit for Review
-1. Log in to [WordPress.org](https://wordpress.org/) (create an account if you do not have one).
+1. Log in to [WordPress.org](https://wordpress.org/).
 2. Go to the [Add Your Plugin page](https://wordpress.org/plugins/developers/add/).
-3. Upload the `.zip` file, fill out the slug (`ai-provider-for-openai-chat-completion`), and submit.
-4. The WordPress Plugin Review team will review the code (usually takes 1 to 14 days). They will contact you via email if any adjustments are needed, or with approval.
+3. Upload the `ai-provider-for-openai-chat-completion.zip` file, fill out the slug (`ai-provider-for-openai-chat-completion`), and submit.
+4. The WordPress Plugin Review team will review the code and contact you via email once approved.
 
 ### Step 3: Publish via SVN
 Once approved, WordPress.org will generate a Subversion (SVN) repository for your plugin: `https://plugins.svn.wordpress.org/ai-provider-for-openai-chat-completion/`.
@@ -106,38 +135,25 @@ Once approved, WordPress.org will generate a Subversion (SVN) repository for you
    ```bash
    svn co https://plugins.svn.wordpress.org/ai-provider-for-openai-chat-completion/ local-svn
    ```
-2. The folder structure will look like this:
-   - `assets/` (for store assets like icons, banners, and screenshots)
-   - `branches/` (historical branches)
-   - `tags/` (releases/version tags)
-   - `trunk/` (the main active code directory)
-
-3. Copy all plugin files into the `trunk/` folder:
+2. Copy all plugin files into the `trunk/` folder:
    ```bash
    cp -r ai-provider-for-openai-chat-completion/* local-svn/trunk/
    ```
-
-4. Add and commit the changes to `trunk`:
+3. Add and commit the changes to `trunk`:
    ```bash
    cd local-svn
    svn add trunk/*
    svn commit -m "Initial release (v1.0.0)" --username <your_wordpress_username>
    ```
-
-5. Tag the release:
-   Copy the `trunk` files to `tags/1.0.0/` (matching the `Stable tag` in `readme.txt`):
+4. Tag the release:
+   Copy the `trunk` files to `tags/1.0.0/` and commit:
    ```bash
    svn copy trunk tags/1.0.0
    svn commit -m "Tagging release 1.0.0" --username <your_wordpress_username>
    ```
 
 ### Step 4: Add Store Assets (Optional)
-To make your plugin look premium on WordPress.org, add assets to the `assets/` folder:
-- **Icon**: `icon-128x128.png` and `icon-256x256.png`
-- **Banner**: `banner-772x250.png` and `banner-1544x500.png`
-- **Screenshot**: `screenshot-1.png` (matching the Screenshot #1 description in `readme.txt`)
-
-Commit the assets folder to SVN:
+Add graphics in the `assets/` folder (such as `banner-772x250.png` and `icon-128x128.png`) and commit:
 ```bash
 svn add assets/*
 svn commit -m "Add plugin directory assets"
