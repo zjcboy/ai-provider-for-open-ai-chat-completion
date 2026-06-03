@@ -3,7 +3,7 @@ Contributors: jonathanbossenger
 Tags: ai, openai, deepseek, ollama, chatcompletion, artificial-intelligence, connector
 Requires at least: 6.9
 Tested up to: 7.0
-Stable tag: 1.0.8
+Stable tag: 1.0.9
 Requires PHP: 7.4
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
