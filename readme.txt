@@ -1,9 +1,9 @@
-=== AI Provider for OpenAI Compatible ChatCompletion ===
+=== AnyLLM Connector for OpenAI-Compatible APIs ===
 Contributors: jonathanbossenger
 Tags: ai, openai, deepseek, ollama, chatcompletion, artificial-intelligence, connector
 Requires at least: 6.9
 Tested up to: 7.0
-Stable tag: 1.0.16
+Stable tag: 1.0.17
 Requires PHP: 7.4
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -30,7 +30,7 @@ This plugin provides generic OpenAI ChatCompletion-compatible integration for th
 
 == Installation ==
 
-1. Upload the plugin files to `/wp-content/plugins/ai-provider-for-openai-chat-completion/`
+1. Upload the plugin files to `/wp-content/plugins/anyllm-connector-for-openai-compatible-apis/`
 2. Activate the plugin through the 'Plugins' menu in WordPress
 3. Configure the settings (API URL, API Key, and Model List) under Settings -> AI OpenAI Compatible in your WordPress admin panel, OR define them via environment variables/constants.
 
