@@ -3,7 +3,7 @@
 set -e
 
 # 1. Retrieve and increment version number
-CURRENT_VERSION=$(grep -E '^\s*\*\s*Version:\s*[0-9]+\.[0-9]+\.[0-9]+' ai-provider-for-openai-chat-completion.php | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')
+CURRENT_VERSION=$(grep -E '^\s*\*\s*Version:\s*[0-9]+\.[0-9]+\.[0-9]+' anyllm-connector-for-openai-compatible-apis.php | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')
 if [ -z "$CURRENT_VERSION" ]; then
     echo "Error: Could not read current version from main plugin file."
     exit 1
@@ -24,10 +24,10 @@ fi
 echo "=== Upgrading version: $CURRENT_VERSION -> $NEW_VERSION ==="
 
 # 2. Update version strings in plugin files
-perl -pi -e "s/(Version:\s*)[0-9]+\.[0-9]+\.[0-9]+/\${1}$NEW_VERSION/g" ai-provider-for-openai-chat-completion.php
+perl -pi -e "s/(Version:\s*)[0-9]+\.[0-9]+\.[0-9]+/\${1}$NEW_VERSION/g" anyllm-connector-for-openai-compatible-apis.php
 perl -pi -e "s/(Stable tag:\s*)[0-9]+\.[0-9]+\.[0-9]+/\${1}$NEW_VERSION/g" readme.txt
 
-echo "Version updated in ai-provider-for-openai-chat-completion.php and readme.txt."
+echo "Version updated in anyllm-connector-for-openai-compatible-apis.php and readme.txt."
 
 # 3. Running Semantic Checks
 echo "=== Running Semantic Checks ==="
@@ -64,13 +64,13 @@ fi
 echo "=== Semantic Checks Passed! ==="
 
 # 4. Packaging
-ZIP_NAME="ai-provider-for-openai-chat-completion-$NEW_VERSION.zip"
-TMP_DIR="ai-provider-for-openai-chat-completion"
+ZIP_NAME="anyllm-connector-for-openai-compatible-apis-$NEW_VERSION.zip"
+TMP_DIR="anyllm-connector-for-openai-compatible-apis"
 
 echo "Packaging plugin to $ZIP_NAME..."
 
 # Remove old zips if any
-rm -f ai-provider-for-openai-chat-completion-*.zip
+rm -f anyllm-connector-for-openai-compatible-apis-*.zip
 
 # Create temp directory
 rm -rf "$TMP_DIR"
@@ -78,7 +78,7 @@ mkdir "$TMP_DIR"
 
 # Copy only production distribution files
 cp -r src "$TMP_DIR/"
-cp ai-provider-for-openai-chat-completion.php "$TMP_DIR/"
+cp anyllm-connector-for-openai-compatible-apis.php "$TMP_DIR/"
 cp readme.txt "$TMP_DIR/"
 cp README.md "$TMP_DIR/"
 cp LICENSE "$TMP_DIR/"
@@ -95,10 +95,10 @@ echo "Saved to: $ZIP_NAME"
 # 5. Git Commit, Tag & Push
 echo "=== Submitting to GitHub ==="
 
-if git diff --quiet ai-provider-for-openai-chat-completion.php readme.txt; then
+if git diff --quiet anyllm-connector-for-openai-compatible-apis.php readme.txt; then
     echo "No version changes detected in git. Skipping commit/tag."
 else
-    git add ai-provider-for-openai-chat-completion.php readme.txt
+    git add anyllm-connector-for-openai-compatible-apis.php readme.txt
     git commit -m "Bump version to $NEW_VERSION"
     
     echo "Creating Git tag v$NEW_VERSION..."

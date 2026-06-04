@@ -4,7 +4,7 @@ includes:
 parameters:
     level: 5
     paths:
-        - ai-provider-for-openai-chat-completion.php
+        - anyllm-connector-for-openai-compatible-apis.php
         - src/
     excludePaths:
         - vendor/

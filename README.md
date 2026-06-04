@@ -1,6 +1,6 @@
-# AI Provider for OpenAI Compatible ChatCompletion
+# AnyLLM Connector for OpenAI-Compatible APIs
 
-An AI Provider for OpenAI Compatible ChatCompletion endpoints for the [PHP AI Client](https://github.com/WordPress/php-ai-client) SDK. Works as both a Composer package and a WordPress plugin.
+An AnyLLM Connector for OpenAI-Compatible APIs for the [PHP AI Client](https://github.com/WordPress/php-ai-client) SDK. Works as both a Composer package and a WordPress plugin.
 
 ## Requirements
 
@@ -12,7 +12,7 @@ An AI Provider for OpenAI Compatible ChatCompletion endpoints for the [PHP AI Cl
 
 ### As a WordPress Plugin
 
-1. Download the pre-built `ai-provider-for-openai-chat-completion.zip` file from the [Releases](../../releases) page of the GitHub repository.
+1. Download the pre-built `anyllm-connector-for-openai-compatible-apis.zip` file from the [Releases](../../releases) page of the GitHub repository.
 2. Upload and install it via **Plugins -> Add New -> Upload Plugin** in your WordPress admin panel, OR upload the unzipped folder to `/wp-content/plugins/`.
 3. Ensure the PHP AI Client is installed and active.
 4. Activate the plugin through the WordPress admin.
@@ -20,7 +20,7 @@ An AI Provider for OpenAI Compatible ChatCompletion endpoints for the [PHP AI Cl
 ### As a Composer Package
 
 ```bash
-composer require wordpress/ai-provider-for-openai-chat-completion
+composer require wordpress/anyllm-connector-for-openai-compatible-apis
 ```
 
 ## Configuration
@@ -95,7 +95,7 @@ We have configured a GitHub Actions workflow that automates this when a new Git 
    git tag v1.0.0
    git push origin v1.0.0
    ```
-2. The workflow will run the semantic checks (PHP Lint & PHPStan) and automatically compile and attach `ai-provider-for-openai-chat-completion.zip` to the release.
+2. The workflow will run the semantic checks (PHP Lint & PHPStan) and automatically compile and attach `anyllm-connector-for-openai-compatible-apis.zip` to the release.
 
 ### Method B: Manual Release
 
@@ -107,7 +107,7 @@ We have configured a GitHub Actions workflow that automates this when a new Git 
 3. Click on the **Releases** section on the right side of the repository homepage.
 4. Click **Draft a new release**.
 5. Select or create a tag (e.g. `v1.0.0`), fill in the release title and description.
-6. Drag and drop the generated `ai-provider-for-openai-chat-completion.zip` into the **Attach binaries** box.
+6. Drag and drop the generated `anyllm-connector-for-openai-compatible-apis.zip` into the **Attach binaries** box.
 7. Click **Publish release**.
 
 ---
@@ -125,19 +125,19 @@ Exclude any Git files, metadata, or scratch tests, and compress the plugin direc
 ### Step 2: Submit for Review
 1. Log in to [WordPress.org](https://wordpress.org/).
 2. Go to the [Add Your Plugin page](https://wordpress.org/plugins/developers/add/).
-3. Upload the `ai-provider-for-openai-chat-completion.zip` file, fill out the slug (`ai-provider-for-openai-chat-completion`), and submit.
+3. Upload the `anyllm-connector-for-openai-compatible-apis.zip` file, fill out the slug (`anyllm-connector-for-openai-compatible-apis`), and submit.
 4. The WordPress Plugin Review team will review the code and contact you via email once approved.
 
 ### Step 3: Publish via SVN
-Once approved, WordPress.org will generate a Subversion (SVN) repository for your plugin: `https://plugins.svn.wordpress.org/ai-provider-for-openai-chat-completion/`.
+Once approved, WordPress.org will generate a Subversion (SVN) repository for your plugin: `https://plugins.svn.wordpress.org/anyllm-connector-for-openai-compatible-apis/`.
 
 1. Check out the SVN repository locally:
    ```bash
-   svn co https://plugins.svn.wordpress.org/ai-provider-for-openai-chat-completion/ local-svn
+   svn co https://plugins.svn.wordpress.org/anyllm-connector-for-openai-compatible-apis/ local-svn
    ```
 2. Copy all plugin files into the `trunk/` folder:
    ```bash
-   cp -r ai-provider-for-openai-chat-completion/* local-svn/trunk/
+   cp -r anyllm-connector-for-openai-compatible-apis/* local-svn/trunk/
    ```
 3. Add and commit the changes to `trunk`:
    ```bash

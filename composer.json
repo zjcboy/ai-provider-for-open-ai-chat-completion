@@ -1,6 +1,6 @@
 {
-    "name": "wordpress/ai-provider-for-openai-chat-completion",
-    "description": "AI Provider for OpenAI Compatible ChatCompletion for the WordPress AI Client.",
+    "name": "wordpress/anyllm-connector-for-openai-compatible-apis",
+    "description": "AnyLLM Connector for OpenAI-Compatible APIs for the WordPress AI Client.",
     "type": "wordpress-plugin",
     "license": "GPL-2.0-or-later",
     "require": {
