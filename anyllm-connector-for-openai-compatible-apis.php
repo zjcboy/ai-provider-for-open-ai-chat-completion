@@ -5,7 +5,7 @@
  * Description: AnyLLM Connector for OpenAI-Compatible APIs for the WordPress AI Client.
  * Requires at least: 6.9
  * Requires PHP: 7.4
- * Version: 1.0.20
+ * Version: 1.0.21
  * Author: zjcboy
  * License: GPL-2.0-or-later
  * License URI: https://spdx.org/licenses/GPL-2.0-or-later.html
